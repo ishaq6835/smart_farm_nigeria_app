@@ -52,7 +52,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
                     : Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
               ),
             ),
-            const SizedBox(height: 20),
+                       const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
@@ -72,6 +72,38 @@ class _PhotoScreenState extends State<PhotoScreen> {
                 ),
               ],
             ),
+            if (_selectedImageBytes != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Diagnosis Result'),
+                        content: Text(
+                          '${widget.cropName} looks healthy.\n\n(This is a placeholder result — real AI diagnosis coming soon.)',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.search),
+                  label: const Text('Analyze'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[800],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
