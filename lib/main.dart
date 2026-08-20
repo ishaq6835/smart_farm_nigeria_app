@@ -1,3 +1,4 @@
+import 'weather_screen.dart';
 import 'package:flutter/material.dart';
 import 'diagnose_screen.dart';
 
@@ -48,7 +49,7 @@ class HomeScreen extends StatelessWidget {
               screen: const DiagnoseScreen(),
             ),
             const SizedBox(height: 12),
-            _buildFeatureButton(context, 'Weather & Soil', Icons.cloud),
+_buildFeatureButton(context, 'Weather & Soil', Icons.cloud, screen: const WeatherScreen()),
             const SizedBox(height: 12),
             _buildFeatureButton(context, 'Market Prices', Icons.trending_up),
           ],
