@@ -7,8 +7,7 @@ plugins {
 android {
     namespace = "com.example.smart_farm_nigeria"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
-
+   
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
