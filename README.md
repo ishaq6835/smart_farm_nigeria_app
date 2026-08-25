@@ -1,10 +1,10 @@
 # Smart Farm Nigeria 🌾
 
-An offline-first mobile app helping smallholder farmers in Northern Nigeria diagnose crop diseases and access real-time weather, soil, and market data — built for maize, rice, groundnut, and beans farmers.
+An offline-first mobile app helping smallholder farmers in Northern Nigeria diagnose crop diseases and access real-time weather, soil, and market data built for maize, rice, groundnut, and beans farmers.
 
 ## About
 
-Smart Farm Nigeria is a Flutter-based agritech app designed for farmers in Gombe State and across Northern Nigeria. The goal is simple, practical tools that work even with limited connectivity: point your phone camera at a sick crop, check today's weather and soil conditions, and see market price estimates for your region — all in one place.
+Smart Farm Nigeria is a Flutter-based agritech app designed for farmers in Gombe State and across Northern Nigeria. The goal is simple, practical tools that work even with limited connectivity: point your phone camera at a sick crop, check today's weather and soil conditions, and see market price estimates for your region all in one place.
 
 ## Features
 
@@ -24,7 +24,7 @@ Smart Farm Nigeria is a Flutter-based agritech app designed for farmers in Gombe
 
 ## Status
 
-🚧 Active development — home screen, crop diagnosis flow (mock results for now), live weather/soil data, and GPS-based market price estimates are all working. Real AI-based diagnosis, offline data storage, and local language support are still in progress.
+🚧 Active development  home screen, crop diagnosis flow (mock results for now), live weather/soil data, and GPS-based market price estimates are all working. Real AI-based diagnosis, offline data storage, and local language support are still in progress.
 
 See [DOCUMENTATION.md](./DOCUMENTATION.md) for full technical details.
 
