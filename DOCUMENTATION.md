@@ -2,7 +2,7 @@
 
 ## Overview
 
-Smart Farm Nigeria is a Flutter mobile app for smallholder farmers in Northern Nigeria, focused on maize, rice, groundnut, and beans. It provides crop diagnosis, live weather/soil data, and regional market price estimates — all designed to work with limited internet access.
+Smart Farm Nigeria is a Flutter mobile app for smallholder farmers in Northern Nigeria, focused on maize, rice, groundnut, and beans. It provides crop diagnosis, live weather/soil data, and regional market price estimates all designed to work with limited internet access.
 
 ## Tech Stack
 
@@ -43,7 +43,7 @@ lib/
 - Detects the user's state via GPS + reverse geocoding
 - Shows estimated price ranges for 4 crops, covering all 36 states + FCT
 - Calculates real distances (via GPS) to a list of known markets, showing the 5 nearest
-- **Status:** Functional, but prices are regional estimates (updated periodically), not live per-market data — there is currently no free live API for Nigerian crop prices
+- **Status:** Functional, but prices are regional estimates (updated periodically), not live per-market data there is currently no free live API for Nigerian crop prices
 
 ### 4. How to Use (Tutorial)
 - Swipeable walkthrough explaining each feature
