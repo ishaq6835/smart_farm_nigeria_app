@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class WeatherScreen extends StatefulWidget {
@@ -14,6 +15,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _weatherData;
+  bool _isFromCache = false;
+  String? _lastUpdated;
 
   @override
   void initState() {
@@ -31,10 +34,14 @@ class _WeatherScreenState extends State<WeatherScreen> {
       final position = await _getCurrentLocation();
       await _fetchWeather(position.latitude, position.longitude);
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
+      // If live fetch fails, try loading cached data instead
+      final loadedCache = await _loadFromCache();
+      if (!loadedCache) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
     }
   }
 
@@ -70,16 +77,39 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
     final response = await http.get(url);
     if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      await _saveToCache(response.body);
       setState(() {
-        _weatherData = json.decode(response.body);
+        _weatherData = data;
+        _isFromCache = false;
         _loading = false;
       });
     } else {
+      throw 'Failed to load weather data';
+    }
+  }
+
+  Future<void> _saveToCache(String jsonString) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cached_weather', jsonString);
+    await prefs.setString('cached_weather_time', DateTime.now().toIso8601String());
+  }
+
+  Future<bool> _loadFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString('cached_weather');
+    final cachedTime = prefs.getString('cached_weather_time');
+
+    if (cached != null) {
       setState(() {
-        _error = 'Failed to load weather data';
+        _weatherData = json.decode(cached);
+        _isFromCache = true;
+        _lastUpdated = cachedTime;
         _loading = false;
       });
+      return true;
     }
+    return false;
   }
 
   @override
@@ -122,6 +152,21 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (_isFromCache)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.orange[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Offline — showing saved data from ${_lastUpdated != null ? DateTime.parse(_lastUpdated!).toLocal().toString().substring(0, 16) : "earlier"}',
+              style: const TextStyle(fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ),
         Card(
           color: Colors.green[50],
           child: Padding(

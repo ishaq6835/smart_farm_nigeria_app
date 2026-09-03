@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class MarketScreen extends StatefulWidget {
@@ -15,6 +16,8 @@ class _MarketScreenState extends State<MarketScreen> {
   String? _error;
   String _detectedState = '';
   Position? _userPosition;
+  bool _isFromCache = false;
+  String? _lastUpdated;
 
   final Map<String, Map<String, int>> _regionalPrices = {
     'Gombe': {'Maize': 45000, 'Rice': 85000, 'Groundnut': 120000, 'Beans': 95000},
@@ -56,8 +59,6 @@ class _MarketScreenState extends State<MarketScreen> {
     'Akwa Ibom': {'Maize': 45400, 'Rice': 90200, 'Groundnut': 125500, 'Beans': 99400},
   };
 
-  // Known markets with real coordinates, spread across regions.
-  // Distances are calculated live from the user's GPS position.
   final List<Map<String, dynamic>> _knownMarkets = [
     {'name': 'Kashere Market', 'lat': 10.05, 'lon': 11.20, 'state': 'Gombe'},
     {'name': 'Gombe Central Market', 'lat': 10.29, 'lon': 11.17, 'state': 'Gombe'},
@@ -100,17 +101,61 @@ class _MarketScreenState extends State<MarketScreen> {
     try {
       final position = await _getCurrentLocation();
       final state = await _reverseGeocode(position.latitude, position.longitude);
+      await _saveToCache(state, position.latitude, position.longitude);
       setState(() {
         _userPosition = position;
         _detectedState = state;
+        _isFromCache = false;
         _loading = false;
       });
     } catch (e) {
+      final loadedCache = await _loadFromCache();
+      if (!loadedCache) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveToCache(String state, double lat, double lon) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cached_market_state', state);
+    await prefs.setDouble('cached_market_lat', lat);
+    await prefs.setDouble('cached_market_lon', lon);
+    await prefs.setString('cached_market_time', DateTime.now().toIso8601String());
+  }
+
+  Future<bool> _loadFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final state = prefs.getString('cached_market_state');
+    final lat = prefs.getDouble('cached_market_lat');
+    final lon = prefs.getDouble('cached_market_lon');
+    final time = prefs.getString('cached_market_time');
+
+    if (state != null && lat != null && lon != null) {
       setState(() {
-        _error = e.toString();
+        _detectedState = state;
+        _userPosition = Position(
+          latitude: lat,
+          longitude: lon,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0,
+        );
+        _isFromCache = true;
+        _lastUpdated = time;
         _loading = false;
       });
+      return true;
     }
+    return false;
   }
 
   Future<Position> _getCurrentLocation() async {
@@ -239,7 +284,21 @@ class _MarketScreenState extends State<MarketScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Location header
+        if (_isFromCache)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.orange[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Offline — showing saved data from ${_lastUpdated != null ? DateTime.parse(_lastUpdated!).toLocal().toString().substring(0, 16) : "earlier"}',
+              style: const TextStyle(fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
