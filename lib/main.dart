@@ -3,13 +3,27 @@ import 'diagnose_screen.dart';
 import 'weather_screen.dart';
 import 'market_screen.dart';
 import 'tutorial_screen.dart';
+import 'translations.dart';
 
 void main() {
   runApp(const SmartFarmApp());
 }
 
-class SmartFarmApp extends StatelessWidget {
+class SmartFarmApp extends StatefulWidget {
   const SmartFarmApp({super.key});
+
+  @override
+  State<SmartFarmApp> createState() => _SmartFarmAppState();
+}
+
+class _SmartFarmAppState extends State<SmartFarmApp> {
+  String _languageCode = 'en';
+
+  void _setLanguage(String code) {
+    setState(() {
+      _languageCode = code;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,37 +33,49 @@ class SmartFarmApp extends StatelessWidget {
         primarySwatch: Colors.green,
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(
+        languageCode: _languageCode,
+        onLanguageChange: _setLanguage,
+      ),
     );
   }
 }
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  final String languageCode;
+  final Function(String) onLanguageChange;
+
+  const HomeScreen({
+    super.key,
+    required this.languageCode,
+    required this.onLanguageChange,
+  });
+
+  String t(String key) => Translations.get(key, languageCode);
 
   @override
   Widget build(BuildContext context) {
     final tiles = [
       {
-        'label': 'Diagnose Crop',
+        'label': t('diagnose_crop'),
         'icon': Icons.camera_alt,
         'color': Colors.green,
-        'screen': const DiagnoseScreen(),
+        'screen': DiagnoseScreen(languageCode: languageCode),
       },
       {
-        'label': 'Weather & Soil',
+        'label': t('weather_soil'),
         'icon': Icons.cloud,
         'color': Colors.blue,
         'screen': const WeatherScreen(),
       },
       {
-        'label': 'Market Prices',
+        'label': t('market_prices'),
         'icon': Icons.trending_up,
         'color': Colors.orange,
         'screen': const MarketScreen(),
       },
       {
-        'label': 'How to Use',
+        'label': t('how_to_use'),
         'icon': Icons.help_outline,
         'color': Colors.purple,
         'screen': const TutorialScreen(),
@@ -59,23 +85,28 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Smart Farm Nigeria'),
+        title: Text(t('app_title')),
         backgroundColor: Colors.green[800],
         foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.language),
+            onSelected: onLanguageChange,
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'en', child: Text('English')),
+              const PopupMenuItem(value: 'ha', child: Text('Hausa')),
+            ],
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Welcome, Farmer!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
             Text(
-              'What would you like to do today?',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              t('welcome'),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Expanded(
