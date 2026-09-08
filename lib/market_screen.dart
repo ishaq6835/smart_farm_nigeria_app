@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 
 class MarketScreen extends StatefulWidget {
@@ -60,30 +61,26 @@ class _MarketScreenState extends State<MarketScreen> {
   };
 
   final List<Map<String, dynamic>> _knownMarkets = [
-    {'name': 'Kashere Market', 'lat': 10.05, 'lon': 11.20, 'state': 'Gombe'},
-    {'name': 'Gombe Central Market', 'lat': 10.29, 'lon': 11.17, 'state': 'Gombe'},
-    {'name': 'Kumo Market', 'lat': 10.05, 'lon': 11.21, 'state': 'Gombe'},
-    {'name': 'Dukku Market', 'lat': 10.82, 'lon': 10.77, 'state': 'Gombe'},
-    {'name': 'Kano Central Market', 'lat': 12.00, 'lon': 8.52, 'state': 'Kano'},
-    {'name': 'Kaduna Central Market', 'lat': 10.52, 'lon': 7.44, 'state': 'Kaduna'},
-    {'name': 'Bauchi Central Market', 'lat': 10.31, 'lon': 9.84, 'state': 'Bauchi'},
-    {'name': 'Maiduguri Monday Market', 'lat': 11.85, 'lon': 13.16, 'state': 'Borno'},
-    {'name': 'Yola Market', 'lat': 9.20, 'lon': 12.48, 'state': 'Adamawa'},
-    {'name': 'Katsina Central Market', 'lat': 12.99, 'lon': 7.60, 'state': 'Katsina'},
-    {'name': 'Dutse Market', 'lat': 11.76, 'lon': 9.34, 'state': 'Jigawa'},
-    {'name': 'Sokoto Central Market', 'lat': 13.06, 'lon': 5.24, 'state': 'Sokoto'},
-    {'name': 'Minna Market', 'lat': 9.61, 'lon': 6.55, 'state': 'Niger'},
-    {'name': 'Jos Terminus Market', 'lat': 9.90, 'lon': 8.90, 'state': 'Plateau'},
-    {'name': 'Makurdi Wurukum Market', 'lat': 7.73, 'lon': 8.53, 'state': 'Benue'},
-    {'name': 'Ilorin Central Market', 'lat': 8.50, 'lon': 4.55, 'state': 'Kwara'},
-    {'name': 'Wuse Market, Abuja', 'lat': 9.06, 'lon': 7.49, 'state': 'FCT'},
-    {'name': 'Ibadan Bodija Market', 'lat': 7.44, 'lon': 3.90, 'state': 'Oyo'},
-    {'name': 'Mile 12 Market, Lagos', 'lat': 6.60, 'lon': 3.39, 'state': 'Lagos'},
-    {'name': 'Onitsha Main Market', 'lat': 6.15, 'lon': 6.79, 'state': 'Anambra'},
-    {'name': 'Aba Ariaria Market', 'lat': 5.11, 'lon': 7.37, 'state': 'Abia'},
-    {'name': 'Port Harcourt Mile 3 Market', 'lat': 4.82, 'lon': 7.02, 'state': 'Rivers'},
-    {'name': 'Calabar Watt Market', 'lat': 4.95, 'lon': 8.32, 'state': 'Cross River'},
-    {'name': 'Uyo Itam Market', 'lat': 5.03, 'lon': 7.92, 'state': 'Akwa Ibom'},
+    {'name': 'Muda Lawal Market, Bauchi', 'lat': 10.3128, 'lon': 9.8442},
+    {'name': 'Alkaleri Market', 'lat': 10.2833, 'lon': 10.2833},
+    {'name': 'Bogoro Market', 'lat': 9.9333, 'lon': 9.6833},
+    {'name': 'Dambam Market', 'lat': 11.4333, 'lon': 10.4167},
+    {'name': 'Darazo Market', 'lat': 11.0833, 'lon': 10.1333},
+    {'name': 'Dass Market', 'lat': 9.9333, 'lon': 9.7500},
+    {'name': 'Gamawa Market', 'lat': 12.1330, 'lon': 10.5330},
+    {'name': 'Ganjuwa Market (Kafin Madaki)', 'lat': 10.7333, 'lon': 9.8000},
+    {'name': 'Giade Market', 'lat': 11.9667, 'lon': 9.9500},
+    {'name': 'Itas/Gadau Market', 'lat': 11.8356, 'lon': 10.1672},
+    {'name': 'Jamaare Market', 'lat': 11.9833, 'lon': 10.0167},
+    {'name': 'Azare Market (Katagum)', 'lat': 11.6742, 'lon': 10.1928},
+    {'name': 'Kirfi Market', 'lat': 10.1667, 'lon': 10.3667},
+    {'name': 'Misau Market', 'lat': 11.3439, 'lon': 10.0089},
+    {'name': 'Ningi Market', 'lat': 10.7833, 'lon': 9.3667},
+    {'name': 'Shira Market', 'lat': 11.7333, 'lon': 9.9000},
+    {'name': 'Bununu Market (Tafawa Balewa)', 'lat': 9.9500, 'lon': 9.7333},
+    {'name': 'Toro Market', 'lat': 10.0833, 'lon': 9.1500},
+    {'name': 'Warji Market (Gabarin)', 'lat': 11.1333, 'lon': 9.7500},
+    {'name': 'Zaki Market (Katagum HQ)', 'lat': 12.1333, 'lon': 9.8833},
   ];
 
   @override
@@ -222,7 +219,7 @@ class _MarketScreenState extends State<MarketScreen> {
       };
     }).toList();
 
-    withDistance.sort((a, b) => a['distanceKm'].compareTo(b['distanceKm']));
+    withDistance.sort((a, b) => (a['distanceKm'] as double).compareTo(b['distanceKm'] as double));
     return withDistance.take(5).toList();
   }
 
@@ -237,6 +234,19 @@ class _MarketScreenState extends State<MarketScreen> {
     final low = (basePrice * 0.97).round();
     final high = (basePrice * 1.03).round();
     return '₦${_formatNumber(low)} - ₦${_formatNumber(high)}';
+  }
+
+  Future<void> _openInMaps(double lat, double lon, String name) async {
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lon',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open Google Maps')),
+        );
+      }
+    }
   }
 
   @override
@@ -294,7 +304,7 @@ class _MarketScreenState extends State<MarketScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'Offline — showing saved data from ${_lastUpdated != null ? DateTime.parse(_lastUpdated!).toLocal().toString().substring(0, 16) : "earlier"}',
+              'Offline - showing saved data from ${_lastUpdated != null ? DateTime.parse(_lastUpdated!).toLocal().toString().substring(0, 16) : "earlier"}',
               style: const TextStyle(fontSize: 12),
               textAlign: TextAlign.center,
             ),
@@ -395,30 +405,37 @@ class _MarketScreenState extends State<MarketScreen> {
 
         const SizedBox(height: 24),
         const Text('Nearby Markets', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const Text('Tap a market for directions', style: TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 10),
         if (nearby.isEmpty)
-          const Text('No market data nearby yet.')
+          const Text('No market data available.')
         else
           ...nearby.map((market) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.brown[50],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.storefront, color: Colors.brown),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(market['name'], style: const TextStyle(fontWeight: FontWeight.w600)),
-                  ),
-                  Text(
-                    '${(market['distanceKm'] as double).toStringAsFixed(1)} km',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown),
-                  ),
-                ],
+            return InkWell(
+              onTap: () => _openInMaps(market['lat'], market['lon'], market['name']),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.brown[50],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.storefront, color: Colors.brown),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(market['name'], style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                    Text(
+                      '${(market['distanceKm'] as double).toStringAsFixed(1)} km',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.directions, color: Colors.brown, size: 20),
+                  ],
+                ),
               ),
             );
           }),
@@ -426,3 +443,4 @@ class _MarketScreenState extends State<MarketScreen> {
     );
   }
 }
+

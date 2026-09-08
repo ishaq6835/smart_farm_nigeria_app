@@ -27,8 +27,9 @@ class _SmartFarmAppState extends State<SmartFarmApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+        return MaterialApp(
       title: 'Smart Farm Nigeria',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.green,
         useMaterial3: true,
