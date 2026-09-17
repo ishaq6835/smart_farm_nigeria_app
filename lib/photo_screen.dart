@@ -21,9 +21,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
 
   String t(String key) => Translations.get(key, widget.languageCode);
 
-  // Treatment reference data, keyed by condition name.
-  // Used for both the real Maize model output and the placeholder
-  // results for crops without a trained model yet.
   final Map<String, Map<String, String>> _treatmentInfo = {
     'Healthy': {
       'symptoms': 'No visible signs of disease or pest damage.',
@@ -87,7 +84,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
     },
   };
 
-  // Placeholder options for crops without a trained model yet.
   final Map<String, List<String>> _placeholderConditions = {
     'Rice': ['Healthy', 'Rice Blast', 'Bacterial Leaf Blight', 'Brown Spot'],
     'Groundnut': ['Healthy', 'Groundnut Rosette Disease', 'Early Leaf Spot', 'Late Leaf Spot'],
@@ -109,7 +105,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
 
     try {
       if (widget.cropName == 'Maize') {
-        // Real model inference
         final result = await MaizeClassifier.classify(_selectedImageBytes!);
         _showDiagnosisDialog(
           condition: result['label'],
@@ -117,7 +112,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
           isReal: true,
         );
       } else {
-        // Placeholder for crops without a trained model yet
         final options = _placeholderConditions[widget.cropName] ?? ['Healthy'];
         final random = Random();
         final condition = options[random.nextInt(options.length)];
@@ -281,4 +275,3 @@ class _PhotoScreenState extends State<PhotoScreen> {
     );
   }
 }
-
