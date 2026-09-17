@@ -14,17 +14,15 @@ dependencies:
   geolocator: ^14.0.3
   image_picker: ^1.2.3
   shared_preferences: ^2.5.5
-<<<<<<< Updated upstream
-=======
   url_launcher: ^6.3.2
   tflite_flutter: ^0.12.1
   image: ^4.9.2
->>>>>>> Stashed changes
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -32,3 +30,8 @@ flutter:
     - assets/models/model_unquant.tflite
     - assets/models/labels.txt
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21

@@ -1,13 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
-<<<<<<< Updated upstream
-=======
 import 'dart:math';
 import 'translations.dart';
 import 'maize_classifier.dart';
->>>>>>> Stashed changes
-
 class PhotoScreen extends StatefulWidget {
   final String cropName;
   const PhotoScreen({super.key, required this.cropName});
@@ -21,8 +17,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _analyzing = false;
 
-<<<<<<< Updated upstream
-=======
   String t(String key) => Translations.get(key, widget.languageCode);
 
   // Treatment reference data, keyed by condition name.
@@ -98,7 +92,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
     'Beans': ['Healthy', 'Bean Anthracnose', 'Angular Leaf Spot', 'Bean Common Mosaic Virus'],
   };
 
->>>>>>> Stashed changes
   Future<void> _pickImage(ImageSource source) async {
     final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
@@ -263,27 +256,18 @@ class _PhotoScreenState extends State<PhotoScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-<<<<<<< Updated upstream
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Diagnosis Result'),
-                        content: Text(
-                          '${widget.cropName} looks healthy.\n\n(This is a placeholder result — real AI diagnosis coming soon.)',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('OK'),
+                  onPressed: _analyzing ? null : _analyze,
+                  icon: _analyzing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.search),
-                  label: const Text('Analyze'),
-=======
+                        )
+                      : const Icon(Icons.search),
+                  label: Text(_analyzing ? 'Analyzing...' : t('analyze')),
                   onPressed: _analyzing ? null : _analyze,
                   icon: _analyzing
                       ? const SizedBox(
@@ -293,7 +277,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
                         )
                       : const Icon(Icons.search),
                   label: Text(_analyzing ? 'Analyzing...' : t('analyze')),
->>>>>>> Stashed changes
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green[800],
                     foregroundColor: Colors.white,
