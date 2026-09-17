@@ -1,21 +1,25 @@
-import 'photo_screen.dart';
 import 'package:flutter/material.dart';
+import 'photo_screen.dart';
+import 'translations.dart';
 
 class DiagnoseScreen extends StatelessWidget {
-  const DiagnoseScreen({super.key});
+  final String languageCode;
+  const DiagnoseScreen({super.key, required this.languageCode});
 
-  final List<Map<String, dynamic>> crops = const [
-    {'name': 'Maize', 'icon': Icons.grass},
-    {'name': 'Rice', 'icon': Icons.grain},
-    {'name': 'Groundnut', 'icon': Icons.eco},
-    {'name': 'Beans', 'icon': Icons.spa},
+  String t(String key) => Translations.get(key, languageCode);
+
+  List<Map<String, dynamic>> get crops => [
+    {'key': 'maize', 'icon': Icons.grass},
+    {'key': 'rice', 'icon': Icons.grain},
+    {'key': 'groundnut', 'icon': Icons.eco},
+    {'key': 'beans', 'icon': Icons.spa},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Diagnose Crop'),
+        title: Text(t('diagnose_crop')),
         backgroundColor: Colors.green[800],
       ),
       body: Padding(
@@ -23,9 +27,9 @@ class DiagnoseScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Select your crop:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              t('select_crop'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -38,23 +42,27 @@ class DiagnoseScreen extends StatelessWidget {
                 itemCount: crops.length,
                 itemBuilder: (context, index) {
                   final crop = crops[index];
+                  final cropName = t(crop['key']);
                   return Card(
                     elevation: 3,
                     child: InkWell(
-                     onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => PhotoScreen(cropName: crop['name']),
-    ),
-  );
-},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PhotoScreen(
+                              cropName: cropName,
+                              languageCode: languageCode,
+                            ),
+                          ),
+                        );
+                      },
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(crop['icon'], size: 48, color: Colors.green[800]),
                           const SizedBox(height: 8),
-                          Text(crop['name'], style: const TextStyle(fontSize: 16)),
+                          Text(cropName, style: const TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),

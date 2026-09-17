@@ -21,7 +21,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
       'title': 'Diagnose Your Crop',
       'description': 'Pick your crop, snap a photo of the leaf, and get a quick health check.',
       'action': 'Try Diagnosis',
-      'screen': const DiagnoseScreen(),
+            'screen': const DiagnoseScreen(languageCode: 'en'),
     },
     {
       'icon': Icons.cloud,

@@ -4,9 +4,11 @@ import 'dart:typed_data';
 import 'dart:math';
 import 'translations.dart';
 import 'maize_classifier.dart';
+
 class PhotoScreen extends StatefulWidget {
   final String cropName;
-  const PhotoScreen({super.key, required this.cropName});
+  final String languageCode;
+  const PhotoScreen({super.key, required this.cropName, required this.languageCode});
 
   @override
   State<PhotoScreen> createState() => _PhotoScreenState();
@@ -207,16 +209,16 @@ class _PhotoScreenState extends State<PhotoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.cropName} Diagnosis'),
+        title: Text('${widget.cropName} ${t('diagnose_crop')}'),
         backgroundColor: Colors.green[800],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text(
-              'Take or upload a photo of the affected leaf',
-              style: TextStyle(fontSize: 16),
+            Text(
+              t('take_photo'),
+              style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -231,14 +233,14 @@ class _PhotoScreenState extends State<PhotoScreen> {
                     : Image.memory(_selectedImageBytes!, fit: BoxFit.cover),
               ),
             ),
-                       const SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.camera),
                     icon: const Icon(Icons.camera_alt),
-                    label: const Text('Camera'),
+                    label: Text(t('camera')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -246,7 +248,7 @@ class _PhotoScreenState extends State<PhotoScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => _pickImage(ImageSource.gallery),
                     icon: const Icon(Icons.photo_library),
-                    label: const Text('Gallery'),
+                    label: Text(t('gallery')),
                   ),
                 ),
               ],
@@ -256,18 +258,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _analyzing ? null : _analyze,
-                  icon: _analyzing
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.search),
-                  label: Text(_analyzing ? 'Analyzing...' : t('analyze')),
                   onPressed: _analyzing ? null : _analyze,
                   icon: _analyzing
                       ? const SizedBox(
