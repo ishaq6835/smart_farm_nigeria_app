@@ -1,3 +1,4 @@
+import 'splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'diagnose_screen.dart';
 import 'weather_screen.dart';
@@ -34,9 +35,11 @@ class _SmartFarmAppState extends State<SmartFarmApp> {
         primarySwatch: Colors.green,
         useMaterial3: true,
       ),
-      home: HomeScreen(
+      home: SplashScreen(
+       nextScreen: HomeScreen(
         languageCode: _languageCode,
         onLanguageChange: _setLanguage,
+       ),
       ),
     );
   }
