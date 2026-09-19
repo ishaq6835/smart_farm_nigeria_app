@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:math';
 import 'translations.dart';
 import 'maize_classifier.dart';
+import 'groundnut_classifier.dart';
 
 class PhotoScreen extends StatefulWidget {
   final String cropName;
@@ -21,9 +22,6 @@ class _PhotoScreenState extends State<PhotoScreen> {
 
   String t(String key) => Translations.get(key, widget.languageCode);
 
-  // Treatment reference data, keyed by condition name.
-  // Used for both the real Maize model output and the placeholder
-  // results for crops without a trained model yet.
   final Map<String, Map<String, String>> _treatmentInfo = {
     'Healthy': {
       'symptoms': 'No visible signs of disease or pest damage.',
@@ -85,9 +83,35 @@ class _PhotoScreenState extends State<PhotoScreen> {
       'symptoms': 'Mottled light and dark green pattern on leaves, with leaf curling.',
       'treatment': 'Remove infected plants immediately. Control aphid vectors.',
     },
+    'ALTERNARIA LEAF SPOT': {
+  'symptoms':
+      'Dark brown to black circular spots on leaves, often surrounded by yellow halos.',
+  'treatment':
+      'Apply recommended fungicides, remove infected plant debris, and practice crop rotation.',
+},
+
+'LEAF SPOT (EARLY AND LATE)': {
+  'symptoms':
+      'Brown to dark lesions on leaves that may enlarge and cause premature leaf drop.',
+  'treatment':
+      'Apply fungicide early, improve field sanitation, and avoid overcrowding plants.',
+},
+
+'ROSETTE': {
+  'symptoms':
+      'Stunted growth, yellowing, and rosette-like clustering of leaves.',
+  'treatment':
+      'Remove infected plants and control aphids, which spread the disease.',
+},
+
+'RUST': {
+  'symptoms':
+      'Small orange-brown pustules on leaf surfaces that release powdery spores.',
+  'treatment':
+      'Apply fungicide when necessary and use resistant groundnut varieties.',
+},
   };
 
-  // Placeholder options for crops without a trained model yet.
   final Map<String, List<String>> _placeholderConditions = {
     'Rice': ['Healthy', 'Rice Blast', 'Bacterial Leaf Blight', 'Brown Spot'],
     'Groundnut': ['Healthy', 'Groundnut Rosette Disease', 'Early Leaf Spot', 'Late Leaf Spot'],
@@ -109,15 +133,37 @@ class _PhotoScreenState extends State<PhotoScreen> {
 
     try {
       if (widget.cropName == 'Maize') {
-        // Real model inference
-        final result = await MaizeClassifier.classify(_selectedImageBytes!);
-        _showDiagnosisDialog(
-          condition: result['label'],
-          confidence: result['confidence'],
-          isReal: true,
-        );
-      } else {
-        // Placeholder for crops without a trained model yet
+  final result =
+      await MaizeClassifier.classify(
+        _selectedImageBytes!,
+      );
+
+  if (result['label'] == 'NOT GROUDNUT LEAF') {
+    _showLowConfidenceDialog();
+  } else {
+    _showDiagnosisDialog(
+      condition: result['label'],
+      confidence: result['confidence'],
+      isReal: true,
+    );
+  }
+}
+else if (widget.cropName == 'Groundnut') {
+  final result =
+      await GroundnutClassifier.classify(
+        _selectedImageBytes!,
+      );
+if (result['label'] == 'NOT GROUDNUT LEAF') {
+    _showLowConfidenceDialog();
+  } else {
+    _showDiagnosisDialog(
+      condition: result['label'],
+      confidence: result['confidence'],
+      isReal: true,
+    );
+  }
+}
+else {
         final options = _placeholderConditions[widget.cropName] ?? ['Healthy'];
         final random = Random();
         final condition = options[random.nextInt(options.length)];
@@ -134,12 +180,32 @@ class _PhotoScreenState extends State<PhotoScreen> {
     }
   }
 
+  void _showLowConfidenceDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unable to Diagnose'),
+              content: Text(
+        'This image doesn\'t clearly show a ${widget.cropName.toLowerCase()} leaf, or the photo is unclear. '
+        'Please retake the photo with a single leaf filling most of the frame, in good lighting.',
+      ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showDiagnosisDialog({
     required String condition,
     double? confidence,
     required bool isReal,
   }) {
-    final isHealthy = condition == 'Healthy';
+    final isHealthy =
+    condition.toUpperCase() == 'HEALTHY';
     final info = _treatmentInfo[condition];
     final displayCondition = condition.replaceAll('_', ' ');
 
@@ -186,12 +252,11 @@ class _PhotoScreenState extends State<PhotoScreen> {
                 Text(info['treatment']!),
                 const SizedBox(height: 12),
               ],
-              Text(
-                isReal
-                    ? 'Diagnosis from an on-device AI model trained on real maize leaf images.'
-                    : t('placeholder_note'),
-                style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey),
-              ),
+              if (!isReal)
+                Text(
+                  t('placeholder_note'),
+                  style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey),
+                ),
             ],
           ),
         ),
@@ -281,4 +346,3 @@ class _PhotoScreenState extends State<PhotoScreen> {
     );
   }
 }
-

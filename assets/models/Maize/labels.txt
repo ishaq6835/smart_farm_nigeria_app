@@ -1,0 +1,5 @@
+0 Blight
+1 HEALTHY
+2 Common_Rust
+3 Gray_Leaf_Spot
+4 NOT GROUDNUT LEAF 
