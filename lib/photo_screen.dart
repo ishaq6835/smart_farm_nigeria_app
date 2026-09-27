@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:typed_data';
 import 'translations.dart';
 import 'maize_classifier.dart';
+import 'beans_classifier.dart';
 import 'groundnut_classifier.dart';
 import 'rice_classifier.dart';
 import 'gemini_service.dart';
@@ -115,6 +116,17 @@ class _PhotoScreenState extends State<PhotoScreen> {
       'symptoms': 'Small orange-brown pustules on leaf surfaces that release powdery spores.',
       'treatment': 'Apply fungicide when necessary and use resistant groundnut varieties.',
     },
+    'Unclear Image': {
+      'symptoms': 'The image is too unclear or does not show a leaf of the specified crop.',
+      'treatment': 'Retake the photo ensuring a single leaf fills most of the frame, in good lighting.',
+    },'angular_leaf_spot': {
+    'symptoms': 'Angular brown spots bound by leaf veins.',
+    'treatment': 'Rotate crops, use resistant varieties, apply fungicide during humid periods.',
+    },
+  'bean_rust': {
+    'symptoms': 'Small reddish-brown pustules on leaf surfaces, often with a yellow halo.',
+    'treatment': 'Apply fungicide at first sign of pustules. Remove and destroy heavily infected leaves.',
+},
   };
 
   Future<void> _pickImage(ImageSource source) async {
@@ -204,15 +216,16 @@ class _PhotoScreenState extends State<PhotoScreen> {
               source: 'offline',
             );
           }
-        } else {
-          // beans has no offline model
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Beans diagnosis needs an internet connection. Please connect and try again.',
-                ),
-              ),
+               } else if (widget.cropName == 'beans') {
+          final result = await BeansClassifier.classify(_selectedImageBytes!);
+          if (result['label'] == 'Non Beans Leaf') {
+            _showLowConfidenceDialog();
+          } else {
+            _showDiagnosisDialog(
+              condition: result['label'],
+              confidence: result['confidence'],
+              isReal: true,
+              source: 'offline',
             );
           }
         }

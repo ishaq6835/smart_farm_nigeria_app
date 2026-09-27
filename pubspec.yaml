@@ -33,6 +33,7 @@ flutter:
     - assets/models/maize/
     - assets/models/groundnut/
     - assets/models/rice/
+    - assets/models/beans/
     - assets/icon/icon.png
     - .env
     
