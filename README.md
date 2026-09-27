@@ -23,8 +23,7 @@ Smart Farm Nigeria is a Flutter-based agritech app designed for farmers in Gombe
 - **Image Picker** — camera and gallery photo capture
 
 ## Status
-
-🚧 Active development  home screen, crop diagnosis flow (mock results for now), live weather/soil data, and GPS-based market price estimates are all working. Real AI-based diagnosis, offline data storage, and local language support are still in progress.
+🚧 Active development — home screen, live weather/soil data, GPS-based market price estimates, and full crop diagnosis are all working. Diagnosis uses a hybrid approach: online diagnosis via Gemini Vision (all 4 crops) with automatic fallback to offline trained models (Maize, Rice, Groundnut, Beans) when there's no internet connection. Local language support (English/Hausa) is built and in testing.
 
 See [DOCUMENTATION.md](./DOCUMENTATION.md) for full technical details.
 
