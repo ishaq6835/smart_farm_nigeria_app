@@ -42,7 +42,8 @@ class DiagnoseScreen extends StatelessWidget {
                 itemCount: crops.length,
                 itemBuilder: (context, index) {
                   final crop = crops[index];
-                  final cropName = t(crop['key']);
+                  final cropKey = crop['key'] as String;
+                  final displayName = t(cropKey);
                   return Card(
                     elevation: 3,
                     child: InkWell(
@@ -51,7 +52,7 @@ class DiagnoseScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => PhotoScreen(
-                              cropName: cropName,
+                              cropName: cropKey,
                               languageCode: languageCode,
                             ),
                           ),
@@ -62,7 +63,7 @@ class DiagnoseScreen extends StatelessWidget {
                         children: [
                           Icon(crop['icon'], size: 48, color: Colors.green[800]),
                           const SizedBox(height: 8),
-                          Text(cropName, style: const TextStyle(fontSize: 16)),
+                          Text(displayName, style: const TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),

@@ -1,13 +1,15 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:typed_data';
-import 'dart:math';
 import 'translations.dart';
 import 'maize_classifier.dart';
 import 'groundnut_classifier.dart';
+import 'rice_classifier.dart';
+import 'gemini_service.dart';
 
 class PhotoScreen extends StatefulWidget {
-  final String cropName;
+  final String cropName; // 'maize', 'rice', 'groundnut', 'beans'
   final String languageCode;
   const PhotoScreen({super.key, required this.cropName, required this.languageCode});
 
@@ -21,6 +23,8 @@ class _PhotoScreenState extends State<PhotoScreen> {
   bool _analyzing = false;
 
   String t(String key) => Translations.get(key, widget.languageCode);
+
+  String get _cropDisplayName => t(widget.cropName);
 
   final Map<String, Map<String, String>> _treatmentInfo = {
     'Healthy': {
@@ -59,6 +63,18 @@ class _PhotoScreenState extends State<PhotoScreen> {
       'symptoms': 'Small circular brown spots scattered across the leaf surface.',
       'treatment': 'Improve soil fertility, especially potassium levels. Apply fungicide if severe.',
     },
+    'Leaf Blast': {
+      'symptoms': 'Diamond-shaped grey-white lesions with brown borders on leaves.',
+      'treatment': 'Apply fungicide promptly. Avoid excess nitrogen fertilizer.',
+    },
+    'Leaf scald': {
+      'symptoms': 'Alternating light tan and reddish-brown bands running from leaf tip inward, giving a scalded look.',
+      'treatment': 'Use resistant varieties, avoid drought stress, and apply fungicide if severe.',
+    },
+    'Sheath Blight': {
+      'symptoms': 'Greyish-green, oval lesions on the leaf sheath near the waterline, spreading upward.',
+      'treatment': 'Reduce planting density, avoid excess nitrogen, and apply fungicide at early tillering if detected.',
+    },
     'Groundnut Rosette Disease': {
       'symptoms': 'Stunted growth with mottled yellow-green leaves.',
       'treatment': 'Remove infected plants early. Control aphid vectors.',
@@ -84,38 +100,21 @@ class _PhotoScreenState extends State<PhotoScreen> {
       'treatment': 'Remove infected plants immediately. Control aphid vectors.',
     },
     'ALTERNARIA LEAF SPOT': {
-  'symptoms':
-      'Dark brown to black circular spots on leaves, often surrounded by yellow halos.',
-  'treatment':
-      'Apply recommended fungicides, remove infected plant debris, and practice crop rotation.',
-},
-
-'LEAF SPOT (EARLY AND LATE)': {
-  'symptoms':
-      'Brown to dark lesions on leaves that may enlarge and cause premature leaf drop.',
-  'treatment':
-      'Apply fungicide early, improve field sanitation, and avoid overcrowding plants.',
-},
-
-'ROSETTE': {
-  'symptoms':
-      'Stunted growth, yellowing, and rosette-like clustering of leaves.',
-  'treatment':
-      'Remove infected plants and control aphids, which spread the disease.',
-},
-
-'RUST': {
-  'symptoms':
-      'Small orange-brown pustules on leaf surfaces that release powdery spores.',
-  'treatment':
-      'Apply fungicide when necessary and use resistant groundnut varieties.',
-},
-  };
-
-  final Map<String, List<String>> _placeholderConditions = {
-    'Rice': ['Healthy', 'Rice Blast', 'Bacterial Leaf Blight', 'Brown Spot'],
-    'Groundnut': ['Healthy', 'Groundnut Rosette Disease', 'Early Leaf Spot', 'Late Leaf Spot'],
-    'Beans': ['Healthy', 'Bean Anthracnose', 'Angular Leaf Spot', 'Bean Common Mosaic Virus'],
+      'symptoms': 'Dark brown to black circular spots on leaves, often surrounded by yellow halos.',
+      'treatment': 'Apply recommended fungicides, remove infected plant debris, and practice crop rotation.',
+    },
+    'LEAF SPOT (EARLY AND LATE)': {
+      'symptoms': 'Brown to dark lesions on leaves that may enlarge and cause premature leaf drop.',
+      'treatment': 'Apply fungicide early, improve field sanitation, and avoid overcrowding plants.',
+    },
+    'ROSETTE': {
+      'symptoms': 'Stunted growth, yellowing, and rosette-like clustering of leaves.',
+      'treatment': 'Remove infected plants and control aphids, which spread the disease.',
+    },
+    'RUST': {
+      'symptoms': 'Small orange-brown pustules on leaf surfaces that release powdery spores.',
+      'treatment': 'Apply fungicide when necessary and use resistant groundnut varieties.',
+    },
   };
 
   Future<void> _pickImage(ImageSource source) async {
@@ -132,42 +131,91 @@ class _PhotoScreenState extends State<PhotoScreen> {
     setState(() => _analyzing = true);
 
     try {
-      if (widget.cropName == 'Maize') {
-  final result =
-      await MaizeClassifier.classify(
-        _selectedImageBytes!,
-      );
+      final connectivityResult = await Connectivity().checkConnectivity();
+      final isOnline = !connectivityResult.contains(ConnectivityResult.none);
 
-  if (result['label'] == 'NOT GROUDNUT LEAF') {
-    _showLowConfidenceDialog();
-  } else {
-    _showDiagnosisDialog(
-      condition: result['label'],
-      confidence: result['confidence'],
-      isReal: true,
-    );
-  }
-}
-else if (widget.cropName == 'Groundnut') {
-  final result =
-      await GroundnutClassifier.classify(
-        _selectedImageBytes!,
-      );
-if (result['label'] == 'NOT GROUDNUT LEAF') {
-    _showLowConfidenceDialog();
-  } else {
-    _showDiagnosisDialog(
-      condition: result['label'],
-      confidence: result['confidence'],
-      isReal: true,
-    );
-  }
-}
-else {
-        final options = _placeholderConditions[widget.cropName] ?? ['Healthy'];
-        final random = Random();
-        final condition = options[random.nextInt(options.length)];
-        _showDiagnosisDialog(condition: condition, confidence: null, isReal: false);
+      bool onlineSucceeded = false;
+
+      if (isOnline) {
+        // Try Gemini first. If it fails for any reason (overload, timeout,
+        // bad response), fall through to the offline trained model instead
+        // of showing a raw error to the user.
+        try {
+          final result = await GeminiService.diagnose(
+            imageBytes: _selectedImageBytes!,
+            cropName: widget.cropName,
+          );
+
+          final condition = result['condition'] as String? ?? 'Unclear Image';
+          onlineSucceeded = true;
+
+          if (condition == 'Unclear Image') {
+            _showLowConfidenceDialog();
+          } else {
+            _showDiagnosisDialog(
+              condition: condition,
+              confidence: (result['confidence'] as num?)?.toDouble(),
+              isReal: true,
+              source: 'online',
+              onlineSymptoms: result['symptoms'] as String?,
+              onlineTreatment: result['treatment'] as String?,
+            );
+          }
+        } catch (e) {
+          onlineSucceeded = false; // fall through to offline below
+        }
+      }
+
+      if (!onlineSucceeded) {
+        // OFFLINE (or online failed): use trained model where available
+        if (widget.cropName == 'maize') {
+          final result = await MaizeClassifier.classify(_selectedImageBytes!);
+          if (result['label'] == 'NOT GROUDNUT LEAF') {
+            _showLowConfidenceDialog();
+          } else {
+            _showDiagnosisDialog(
+              condition: result['label'],
+              confidence: result['confidence'],
+              isReal: true,
+              source: 'offline',
+            );
+          }
+        } else if (widget.cropName == 'groundnut') {
+          final result = await GroundnutClassifier.classify(_selectedImageBytes!);
+          if (result['label'] == 'NOT GROUDNUT LEAF') {
+            _showLowConfidenceDialog();
+          } else {
+            _showDiagnosisDialog(
+              condition: result['label'],
+              confidence: result['confidence'],
+              isReal: true,
+              source: 'offline',
+            );
+          }
+        } else if (widget.cropName == 'rice') {
+          final result = await RiceClassifier.classify(_selectedImageBytes!);
+          if (result['label'] == 'Non Rice Leaf') {
+            _showLowConfidenceDialog();
+          } else {
+            _showDiagnosisDialog(
+              condition: result['label'],
+              confidence: result['confidence'],
+              isReal: true,
+              source: 'offline',
+            );
+          }
+        } else {
+          // beans has no offline model
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Beans diagnosis needs an internet connection. Please connect and try again.',
+                ),
+              ),
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -185,10 +233,10 @@ else {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Unable to Diagnose'),
-              content: Text(
-        'This image doesn\'t clearly show a ${widget.cropName.toLowerCase()} leaf, or the photo is unclear. '
-        'Please retake the photo with a single leaf filling most of the frame, in good lighting.',
-      ),
+        content: Text(
+          'This image doesn\'t clearly show a ${_cropDisplayName.toLowerCase()} leaf, or the photo is unclear. '
+          'Please retake the photo with a single leaf filling most of the frame, in good lighting.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -203,11 +251,18 @@ else {
     required String condition,
     double? confidence,
     required bool isReal,
+    required String source, // 'online' or 'offline'
+    String? onlineSymptoms,
+    String? onlineTreatment,
   }) {
-    final isHealthy =
-    condition.toUpperCase() == 'HEALTHY';
+    final isHealthy = condition.toUpperCase().contains('HEALTHY');
     final info = _treatmentInfo[condition];
     final displayCondition = condition.replaceAll('_', ' ');
+
+    // Prefer Gemini's own symptoms/treatment text when diagnosed online,
+    // since its disease names won't always match the local _treatmentInfo map.
+    final symptomsText = source == 'online' ? onlineSymptoms : info?['symptoms'];
+    final treatmentText = source == 'online' ? onlineTreatment : info?['treatment'];
 
     showDialog(
       context: context,
@@ -227,7 +282,7 @@ else {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${widget.cropName}: $displayCondition',
+                '$_cropDisplayName: $displayCondition',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -241,22 +296,24 @@ else {
                   style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
               ],
+              const SizedBox(height: 4),
+              Text(
+                source == 'online' ? 'Diagnosed online' : 'Diagnosed offline',
+                style: const TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+              ),
               const SizedBox(height: 12),
-              if (!isHealthy && info != null) ...[
+              if (!isHealthy && symptomsText != null) ...[
                 const Text('Symptoms:', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text(info['symptoms']!),
-                const SizedBox(height: 12),
-                const Text('Recommended Treatment:', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(info['treatment']!),
+                Text(symptomsText),
                 const SizedBox(height: 12),
               ],
-              if (!isReal)
-                Text(
-                  t('placeholder_note'),
-                  style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 12, color: Colors.grey),
-                ),
+              if (!isHealthy && treatmentText != null) ...[
+                const Text('Recommended Treatment:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(treatmentText),
+                const SizedBox(height: 12),
+              ],
             ],
           ),
         ),
@@ -274,7 +331,7 @@ else {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.cropName} ${t('diagnose_crop')}'),
+        title: Text('$_cropDisplayName ${t('diagnose_crop')}'),
         backgroundColor: Colors.green[800],
       ),
       body: Padding(
